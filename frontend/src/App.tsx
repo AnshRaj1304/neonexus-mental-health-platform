@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import LoginPage from './pages/Login';
 import StudentDashboard from './pages/StudentDashboard';
+import ChatBot from './pages/ChatBot';
+import Appointments from './pages/Appointments';
+import Resources from './pages/Resources';
 import { User, LoginForm, UserRole, MoodCheckIn } from './types';
 
 function App() {
@@ -71,9 +74,19 @@ function App() {
   };
 
   const handleNavigate = (path: string) => {
-    // For demo purposes, we'll just log the navigation
+    // Simple navigation system
     console.log(`Navigating to: ${path}`);
-    // In a real app, you'd use React Router here
+    if (path === '/chat') {
+      setCurrentPage('chat');
+    } else if (path === '/appointments') {
+      setCurrentPage('appointments');
+    } else if (path === '/resources') {
+      setCurrentPage('resources');
+    } else if (path === '/forum') {
+      setCurrentPage('forum');
+    } else if (path === '/dashboard') {
+      setCurrentPage('dashboard');
+    }
   };
 
   const handleMoodSubmit = (mood: MoodCheckIn) => {
@@ -92,6 +105,7 @@ function App() {
     );
   }
 
+  // Page routing
   if (currentPage === 'dashboard' && currentUser.role === 'student') {
     return (
       <StudentDashboard 
@@ -100,6 +114,57 @@ function App() {
         onLogout={handleLogout}
         onMoodSubmit={handleMoodSubmit}
       />
+    );
+  }
+
+  if (currentPage === 'chat') {
+    return (
+      <ChatBot 
+        user={currentUser}
+        onNavigate={handleNavigate}
+        onLogout={handleLogout}
+      />
+    );
+  }
+
+  if (currentPage === 'appointments') {
+    return (
+      <Appointments 
+        user={currentUser}
+        onNavigate={handleNavigate}
+        onLogout={handleLogout}
+      />
+    );
+  }
+
+  if (currentPage === 'resources') {
+    return (
+      <Resources 
+        user={currentUser}
+        onNavigate={handleNavigate}
+        onLogout={handleLogout}
+      />
+    );
+  }
+
+  if (currentPage === 'forum') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+            Peer Support Forum
+          </h1>
+          <p className="text-gray-600 mb-6">
+            Community forum coming soon...
+          </p>
+          <button 
+            onClick={() => setCurrentPage('dashboard')}
+            className="px-4 py-2 bg-neon-blue-500 text-white rounded-lg hover:bg-neon-blue-600 transition-colors"
+          >
+            Back to Dashboard
+          </button>
+        </div>
+      </div>
     );
   }
 
