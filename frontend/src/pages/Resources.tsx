@@ -5,25 +5,27 @@ import { User as UserType, Resource, ResourceCategory } from '../types';
 
 interface ResourcesProps {
   user?: UserType;
-  onNavigate?: (path: string) => void;
   onLogout?: () => void;
 }
 
 const Resources: React.FC<ResourcesProps> = ({
   user,
-  onNavigate,
   onLogout,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<ResourceCategory | 'All'>('All');
-  const [selectedLanguage, setSelectedLanguage] = useState<'en' | 'hi' | 'all'>('all');
+  const [selectedLanguage, setSelectedLanguage] = useState<'en' | 'hi' | 'ur' | 'ks' | 'doi' | 'all'>('all');
 
   // Mock resources data
   const resources: Resource[] = [
     {
       id: 1,
       title: 'Managing Exam Stress',
-      titleTranslations: { hi: 'परीक्षा तनाव प्रबंधन', en: 'Managing Exam Stress' },
+      titleTranslations: { 
+        hi: 'परीक्षा तनाव प्रबंधन', 
+        en: 'Managing Exam Stress',
+        ur: 'امتحان کا دباؤ منظم کرنا'
+      },
       description: 'Learn effective techniques to manage exam-related stress and anxiety. This video covers breathing exercises, time management, and positive thinking strategies.',
       type: 'video',
       category: 'Stress Relief',
@@ -44,7 +46,11 @@ const Resources: React.FC<ResourcesProps> = ({
     {
       id: 2,
       title: 'Sleep Hygiene for Students',
-      titleTranslations: { hi: 'छात्रों के लिए नींद की स्वच्छता', en: 'Sleep Hygiene for Students' },
+      titleTranslations: { 
+        hi: 'छात्रों के लिए नींद की स्वच्छता', 
+        en: 'Sleep Hygiene for Students',
+        ur: 'طلباء کے لیے نیند کی حفظان صحت'
+      },
       description: 'गुणवत्तापूर्ण नींद के लिए आवश्यक तकनीकें और सुझाव। बेहतर नींद पैटर्न कैसे बनाएं।',
       type: 'audio',
       category: 'Sleep',
@@ -123,7 +129,11 @@ const Resources: React.FC<ResourcesProps> = ({
     {
       id: 6,
       title: 'Understanding Depression',
-      titleTranslations: { hi: 'अवसाद को समझना', en: 'Understanding Depression' },
+      titleTranslations: { 
+        hi: 'अवसाद को समझना', 
+        en: 'Understanding Depression',
+        ur: 'ڈپریشن کو سمجھنا'
+      },
       description: 'अवसाद के लक्षण, कारण और उपचार के बारे में विस्तृत जानकारी। मानसिक स्वास्थ्य की देखभाल के तरीके।',
       type: 'video',
       category: 'Depression',
@@ -140,6 +150,58 @@ const Resources: React.FC<ResourcesProps> = ({
       ratingCount: 156,
       createdAt: '2024-01-03T13:10:00Z',
       updatedAt: '2024-01-03T13:10:00Z'
+    },
+    {
+      id: 7,
+      title: 'तनाव मैनेजमेंट',
+      titleTranslations: { 
+        ks: 'تناو منظم کرُن', 
+        en: 'Stress Management',
+        hi: 'तनाव प्रबंधन',
+        ur: 'تناو کا انتظام'
+      },
+      description: 'تناو کم کرن کی تکنیک اور مانسک سکون کے طریقے۔ یہ ویڈیو سانس کی تکنیک اور ذہن کو آرام دینے کے طریقے بتاتا ہے۔',
+      type: 'video',
+      category: 'Stress Relief',
+      language: 'ks',
+      url: '/resources/videos/stress-management-kashmiri.mp4',
+      thumbnailUrl: '/resources/thumbnails/stress-ks.jpg',
+      durationMinutes: 18,
+      tags: ['stress', 'meditation', 'breathing', 'kashmiri'],
+      difficultyLevel: 'beginner',
+      isFeatured: true,
+      isActive: true,
+      viewCount: 756,
+      rating: 4.6,
+      ratingCount: 43,
+      createdAt: '2024-01-20T08:30:00Z',
+      updatedAt: '2024-01-20T08:30:00Z'
+    },
+    {
+      id: 8,
+      title: 'मानसिक स्वास्थ्य देखभाल',
+      titleTranslations: { 
+        doi: 'मानसिक सिہت दी دیखभाल', 
+        en: 'Mental Health Care',
+        hi: 'मानसिक स्वास्थ्य देखभाल',
+        ur: 'ذہنی صحت کی دیکھ بھال'
+      },
+      description: 'मन دی سہت کئی رکھن دے खاطر ضروری گلاں۔ ییہ آڈیو تناو, گھبراہट اور اداسی نाल نिपटन دے طریقے بتाउندا ہے۔',
+      type: 'audio',
+      category: 'Self-Care',
+      language: 'doi',
+      url: '/resources/audio/mental-health-dogri.mp3',
+      thumbnailUrl: '/resources/thumbnails/mental-health-doi.jpg',
+      durationMinutes: 25,
+      tags: ['mental health', 'self-care', 'wellness', 'dogri'],
+      difficultyLevel: 'intermediate',
+      isFeatured: false,
+      isActive: true,
+      viewCount: 432,
+      rating: 4.3,
+      ratingCount: 28,
+      createdAt: '2024-01-18T15:45:00Z',
+      updatedAt: '2024-01-18T15:45:00Z'
     }
   ];
 
@@ -190,10 +252,30 @@ const Resources: React.FC<ResourcesProps> = ({
       <Card padding="md" className={`hover:shadow-lg transition-all duration-200 ${featured ? 'border-neon-blue-200 bg-gradient-to-br from-white to-neon-blue-50' : ''}`}>
         <div className="flex flex-col h-full">
           {/* Thumbnail */}
-          <div className="relative mb-4">
-            <div className="w-full h-40 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg flex items-center justify-center">
-              <Icon className="w-12 h-12 text-gray-500" />
-            </div>
+          <div className="relative mb-4 overflow-hidden rounded-lg">
+            {resource.thumbnailUrl ? (
+              <div className="w-full h-40 relative">
+                <img 
+                  src={resource.thumbnailUrl} 
+                  alt={resource.title}
+                  className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                  onError={(e) => {
+                    // Fallback to gradient background with icon if image fails to load
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    const fallback = target.nextElementSibling as HTMLDivElement;
+                    if (fallback) fallback.style.display = 'flex';
+                  }}
+                />
+                <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg hidden items-center justify-center absolute inset-0">
+                  <Icon className="w-12 h-12 text-gray-500" />
+                </div>
+              </div>
+            ) : (
+              <div className="w-full h-40 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg flex items-center justify-center">
+                <Icon className="w-12 h-12 text-gray-500" />
+              </div>
+            )}
             
             {/* Type Badge */}
             <div className={`absolute top-2 left-2 px-2 py-1 rounded-full ${colorClass}`}>
@@ -212,7 +294,7 @@ const Resources: React.FC<ResourcesProps> = ({
           <div className="flex-1 flex flex-col">
             <div className="flex items-start justify-between mb-2">
               <h3 className="font-semibold text-gray-900 line-clamp-2 flex-1">
-                {resource.titleTranslations?.[selectedLanguage as 'en' | 'hi'] || resource.title}
+                {resource.titleTranslations?.[selectedLanguage as keyof typeof resource.titleTranslations] || resource.title}
               </h3>
             </div>
 
@@ -286,7 +368,6 @@ const Resources: React.FC<ResourcesProps> = ({
       <Navigation 
         userRole="student"
         userName={user?.profile?.fullName || 'Student'}
-        onNavigate={onNavigate}
         onLogout={onLogout}
       />
 
@@ -336,12 +417,15 @@ const Resources: React.FC<ResourcesProps> = ({
           <div>
             <select
               value={selectedLanguage}
-              onChange={(e) => setSelectedLanguage(e.target.value as 'en' | 'hi' | 'all')}
+              onChange={(e) => setSelectedLanguage(e.target.value as 'en' | 'hi' | 'ur' | 'ks' | 'doi' | 'all')}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neon-blue-200"
             >
               <option value="all">All Languages</option>
               <option value="en">English</option>
               <option value="hi">हिन्दी</option>
+              <option value="ur">اردو</option>
+              <option value="ks">कॉशुर</option>
+              <option value="doi">डोगरी</option>
             </select>
           </div>
         </div>

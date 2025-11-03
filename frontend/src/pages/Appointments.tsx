@@ -1,19 +1,20 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Calendar, Clock, User, Star, MapPin, Video, Phone, Shield, CheckCircle } from 'lucide-react';
-import { Navigation, Card, Button } from '../components/ui';
+import { Navigation, Card, Button, LoadingSpinner, ToastContainer } from '../components/ui';
 import { User as UserType, CounselorProfile, TimeSlot } from '../types';
+import { useToast } from '../hooks/useToast';
 
 interface AppointmentsProps {
   user?: UserType;
-  onNavigate?: (path: string) => void;
   onLogout?: () => void;
 }
 
 const Appointments: React.FC<AppointmentsProps> = ({
   user,
-  onNavigate,
   onLogout,
 }) => {
+  const navigate = useNavigate();
   const [selectedCounselor, setSelectedCounselor] = useState<CounselorProfile | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedTime, setSelectedTime] = useState<string>('');
@@ -21,6 +22,8 @@ const Appointments: React.FC<AppointmentsProps> = ({
   const [isAnonymous, setIsAnonymous] = useState<boolean>(false);
   const [notes, setNotes] = useState<string>('');
   const [showBookingForm, setShowBookingForm] = useState<boolean>(false);
+  const [isBooking, setIsBooking] = useState<boolean>(false);
+  const toast = useToast();
 
   // Mock counselors data
   const counselors: CounselorProfile[] = [
@@ -34,7 +37,6 @@ const Appointments: React.FC<AppointmentsProps> = ({
       bio: 'Specializes in helping students overcome anxiety and academic pressure. Uses evidence-based cognitive behavioral therapy approaches.',
       avatarUrl: '',
       isAvailable: true,
-      hourlyRate: 1500,
       rating: 4.8,
       totalSessions: 245
     },
@@ -48,7 +50,6 @@ const Appointments: React.FC<AppointmentsProps> = ({
       bio: 'Experienced in working with young adults facing depression and major life changes. Compassionate and non-judgmental approach.',
       avatarUrl: '',
       isAvailable: true,
-      hourlyRate: 1800,
       rating: 4.9,
       totalSessions: 320
     },
@@ -62,7 +63,6 @@ const Appointments: React.FC<AppointmentsProps> = ({
       bio: 'Specializes in trauma-informed care and mindfulness-based interventions. Helps students develop resilience and coping strategies.',
       avatarUrl: '',
       isAvailable: true,
-      hourlyRate: 1700,
       rating: 4.7,
       totalSessions: 190
     }
@@ -81,14 +81,33 @@ const Appointments: React.FC<AppointmentsProps> = ({
     { time: '16:00', available: false, date: 'Tomorrow' },
   ];
 
-  const handleBookAppointment = () => {
-    // Mock booking logic
-    alert('Appointment booked successfully! You will receive a confirmation email shortly.');
-    setShowBookingForm(false);
-    setSelectedCounselor(null);
-    setSelectedDate('');
-    setSelectedTime('');
-    setNotes('');
+  const handleBookAppointment = async () => {
+    if (!selectedCounselor || !selectedDate || !selectedTime) {
+      toast.error('Missing Information', 'Please select a date and time for your appointment.');
+      return;
+    }
+
+    setIsBooking(true);
+    
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      toast.success(
+        'Appointment Booked!', 
+        `Your session with ${selectedCounselor.fullName} is confirmed for ${selectedDate} at ${selectedTime}.`
+      );
+      
+      setShowBookingForm(false);
+      setSelectedCounselor(null);
+      setSelectedDate('');
+      setSelectedTime('');
+      setNotes('');
+    } catch (error) {
+      toast.error('Booking Failed', 'Something went wrong. Please try again.');
+    } finally {
+      setIsBooking(false);
+    }
   };
 
   const CounselorCard: React.FC<{ counselor: CounselorProfile }> = ({ counselor }) => (
@@ -121,13 +140,13 @@ const Appointments: React.FC<AppointmentsProps> = ({
           
           <p className="text-sm text-gray-600 mb-3 line-clamp-2">{counselor.bio}</p>
           
-          <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4 text-xs text-gray-500">
               <span>{counselor.experienceYears} years exp</span>
               <span>•</span>
               <span>Languages: {counselor.languages.join(', ')}</span>
               <span>•</span>
-              <span>₹{counselor.hourlyRate}/session</span>
+              <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">FREE Session</span>
             </div>
             
             <Button
@@ -146,8 +165,12 @@ const Appointments: React.FC<AppointmentsProps> = ({
     </Card>
   );
 
-  const BookingModal = () => (
-    showBookingForm && selectedCounselor && (
+  const BookingModal = (): React.JSX.Element | null => {
+    if (!showBookingForm || !selectedCounselor) {
+      return null;
+    }
+
+    return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <Card padding="lg" className="max-w-2xl w-full max-h-[90vh] overflow-y-auto">
           <div className="flex items-center justify-between mb-6">
@@ -268,11 +291,15 @@ const Appointments: React.FC<AppointmentsProps> = ({
           <div className="flex space-x-3">
             <Button
               onClick={handleBookAppointment}
-              disabled={!selectedDate || !selectedTime}
+              disabled={!selectedDate || !selectedTime || isBooking}
               className="flex-1"
             >
-              <CheckCircle className="w-4 h-4 mr-2" />
-              Confirm Booking
+              {isBooking ? (
+                <LoadingSpinner size="sm" className="mr-2" />
+              ) : (
+                <CheckCircle className="w-4 h-4 mr-2" />
+              )}
+              {isBooking ? 'Booking...' : 'Confirm Booking'}
             </Button>
             <Button
               variant="outline"
@@ -286,15 +313,14 @@ const Appointments: React.FC<AppointmentsProps> = ({
           </div>
         </Card>
       </div>
-    )
-  );
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation 
         userRole="student"
         userName={user?.profile?.fullName || 'Student'}
-        onNavigate={onNavigate}
         onLogout={onLogout}
       />
 
@@ -306,8 +332,8 @@ const Appointments: React.FC<AppointmentsProps> = ({
               <Calendar className="w-8 h-8 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">Counseling Sessions</h1>
-              <p className="text-blue-100">Book confidential sessions with our qualified counselors</p>
+              <h1 className="text-2xl font-bold">Free Counseling Sessions</h1>
+              <p className="text-blue-100">Book confidential sessions with our qualified counselors at no cost</p>
             </div>
           </div>
         </div>
@@ -374,6 +400,10 @@ const Appointments: React.FC<AppointmentsProps> = ({
                   <span className="text-gray-600">Cancellation:</span>
                   <span className="font-medium">Up to 2 hours before</span>
                 </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Cost:</span>
+                  <span className="font-medium text-green-600">FREE</span>
+                </div>
               </div>
             </Card>
 
@@ -411,7 +441,7 @@ const Appointments: React.FC<AppointmentsProps> = ({
                   variant="outline"
                   size="sm"
                   className="w-full justify-start"
-                  onClick={() => onNavigate?.('/chat')}
+                  onClick={() => navigate('/chat')}
                 >
                   AI Chat Support
                 </Button>
@@ -419,7 +449,7 @@ const Appointments: React.FC<AppointmentsProps> = ({
                   variant="outline"
                   size="sm"
                   className="w-full justify-start"
-                  onClick={() => onNavigate?.('/resources')}
+                  onClick={() => navigate('/resources')}
                 >
                   Self-Help Resources
                 </Button>
@@ -427,7 +457,7 @@ const Appointments: React.FC<AppointmentsProps> = ({
                   variant="outline"
                   size="sm"
                   className="w-full justify-start"
-                  onClick={() => onNavigate?.('/forum')}
+                  onClick={() => navigate('/forum')}
                 >
                   Peer Support Forum
                 </Button>
@@ -438,6 +468,7 @@ const Appointments: React.FC<AppointmentsProps> = ({
       </div>
 
       <BookingModal />
+      <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
     </div>
   );
 };

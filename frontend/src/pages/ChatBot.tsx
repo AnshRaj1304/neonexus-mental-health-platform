@@ -1,24 +1,25 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Globe, AlertCircle, Heart, Phone, MessageCircle } from 'lucide-react';
-import { Navigation, Card, Button } from '../components/ui';
+import { useNavigate } from 'react-router-dom';
+import { Send, Bot, User, Globe, AlertCircle, Heart, Phone, MessageCircle, ChevronDown } from 'lucide-react';
+import { Navigation, Card, Button, ToastContainer } from '../components/ui';
 import { ChatMessage, User as UserType, Language } from '../types';
+import { useToast } from '../hooks/useToast';
 
 interface ChatBotProps {
   user?: UserType;
-  onNavigate?: (path: string) => void;
   onLogout?: () => void;
 }
 
 const ChatBot: React.FC<ChatBotProps> = ({
   user,
-  onNavigate,
   onLogout,
 }) => {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
       role: 'assistant',
-      content: `Hello ${user?.profile?.fullName?.split(' ')[0] || 'there'}! 👋 I'm here to provide you with mental health support and guidance. How are you feeling today?`,
+      content: `Hello ${user?.profile?.fullName?.split(' ')[0] || 'there'}! I'm here to provide you with mental health support and guidance. How are you feeling today?`,
       timestamp: new Date().toISOString(),
     }
   ]);
@@ -26,20 +27,45 @@ const ChatBot: React.FC<ChatBotProps> = ({
   const [isTyping, setIsTyping] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState<Language>('en');
   const [showCrisisModal, setShowCrisisModal] = useState(false);
+  const [showScrollButton, setShowScrollButton] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const toast = useToast();
 
   const languages = [
     { code: 'en' as Language, name: 'English', flag: '🇺🇸' },
     { code: 'hi' as Language, name: 'हिन्दी', flag: '🇮🇳' },
     { code: 'ur' as Language, name: 'اردو', flag: '🇵🇰' },
+    { code: 'ks' as Language, name: 'कॉशुर', flag: '🏔️' },
+    { code: 'doi' as Language, name: 'डोगरी', flag: '🏔️' },
   ];
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // Handle scroll to show/hide scroll button
+  const handleScroll = () => {
+    if (messagesContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
+      const isNearBottom = scrollHeight - scrollTop - clientHeight < 50;
+      setShowScrollButton(!isNearBottom && messages.length > 1);
+    }
+  };
+
+  // Only auto-scroll when new messages are added, not on initial load
   useEffect(() => {
-    scrollToBottom();
+    // Skip auto-scroll for the initial welcome message
+    if (messages.length > 1) {
+      // Only auto-scroll if user is already near bottom
+      if (messagesContainerRef.current) {
+        const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
+        const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+        if (isNearBottom) {
+          setTimeout(scrollToBottom, 100);
+        }
+      }
+    }
   }, [messages]);
 
   const mockResponses = {
@@ -66,6 +92,22 @@ const ChatBot: React.FC<ChatBotProps> = ({
       help: "میں یہاں آپ کی مدد کے لیے ہوں۔ آپ ہمارے کونسلر سے ملاقات بک کر سکتے ہیں۔",
       crisis: "میں آپ کے بارے میں بہت فکر مند ہوں۔ برائے کرم فوری طور پر کسی سے رابطہ کریں۔",
       default: "میں آپ کی بات سن رہا ہوں۔ آپ اور بتائیں کہ آپ کیسا محسوس کر رہے ہیں؟"
+    },
+    ks: {
+      stress: "بہ سمجھان چھُس کہ توہہ تناؤ محسوس کران چھیو۔ یمہ کانہہ تکنیک چھیہ یوس مدد کرہ سکان: 5 منٹہ گہری سانس نیو، یا پھر آرام والی موسیقی بونو۔",
+      anxiety: "پریشانی چھیہ آم تجربہ، خاص کر طالب علمو کہ۔ یہ کانہہ ذہن آرام کرنہ والی تکنیکہ آزماؤ: 5 چیزہ وچھو، 4 چیزہ چھُو، 3 چیزہ بونو۔",
+      sad: "بہ سمجھان چھُس کہ توہہ اداس محسوس کران چھیو۔ یاد تھاوو، یہ محسوس کرن چھُ ٹھیک۔ کیا توہہ اتھ کینہہ وننا چھو یا پھر کانہہ خوشی والی سرگرمی کرنا چھو؟",
+      help: "بہ یتھ چھُس تہندی مدد کرنہ خاطرہ۔ توہہ اسان کاؤنسلرو سان وقت مقرر کرہ ہیکو، یا پھر اسان وسائل ویچھہ ہیکو۔",
+      crisis: "بہ تہندے بارے میں واریاہ فکر چھُس۔ مہربانی کرتھ فوری طور پر کنہہ نہ کنہہ سان رابطہ کرو۔ توہہ اکیلہ نہ چھیو۔",
+      default: "بہ تہندی گل بوزان چھُس۔ توہہ مہربانی کرتھ دسو کہ توہہ کیتھ محسوس کران چھیو؟"
+    },
+    doi: {
+      stress: "मैं समझ सकदा ہیں की تुसीं تनاव महसूस کरدے ओ۔ کئی تکنیک ہن جیहडی مدد کرن: 5 मिनٹ گھیری सانس لینے کیں, हीکہ کरکے اپنیاں ماسپیشیاں نوں آرام دینے۔",
+      anxiety: "گھبراہट زروری گل ہے، خاس کرکے نوجواناں کہتے یا طالب علماں کہتے۔ کئی من نوں شانزیں تکنیکاں کریک: 5 چیزاں دیکھیک, 4 چیزاں چھوہیک, 3 آوازاں بونیک۔",
+      sad: "मैं جاندा ہیں की تुسीن اداسی محسوس کردے ओ۔ یاد راکھیک, اسہ محسوس کرن بریک گل نیں ہے۔ تمہ اپنے اہساس اسہ بارے گل کرنا چاہوں دے یا پھر کئی خوشی والی گتیودھی کرنا چاہوں دے؟",
+      help: "मैं تہاڈی مدد لئی اوتھے ہیں۔ تسیں ساڈے کاؤنسلر کول ملاقات کر سکدے ओ, ساڈہ وسائل لائبریری دیکھ سکدے ओ۔",
+      crisis: "मیں تہاڈے بارے بڑی گبھراہ؟ اور خاطر چنتا ہیں۔ کرپا کرکے فوری عقلے کسے نہ کسے کول رابطہ کریک۔ تسیں اِکے نیں ओ۔",
+      default: "मیں تہاڈی گل بات بوندا ہیں۔ براہ کرم چھر دسیک کہ تسیں کتھے محسوس کردے ओ؟"
     }
   };
 
@@ -73,7 +115,11 @@ const ChatBot: React.FC<ChatBotProps> = ({
     const crisisKeywords = [
       'suicide', 'kill myself', 'end it all', 'no point living', 'want to die',
       'आत्महत्या', 'मरना चाहता हूं', 'जीने का मन नहीं',
-      'خودکشی', 'مرنا چاہتا ہوں'
+      'خودکشی', 'مرنا چاہتا ہوں',
+      // Kashmiri keywords
+      'ختم کرُن', 'مرنہ ہیکیں', 'جیندچی خاطر کینہ مطلب',
+      // Dogri keywords
+      'मरना चहुंदा', 'जीनدی खتم کرन', 'आत्महत्या'
     ];
     return crisisKeywords.some(keyword => message.toLowerCase().includes(keyword));
   };
@@ -84,19 +130,27 @@ const ChatBot: React.FC<ChatBotProps> = ({
 
     if (detectCrisis(userMessage)) {
       setShowCrisisModal(true);
+      toast.warning(
+        'Crisis Detected',
+        'We\'re here to help. Please consider reaching out to a professional immediately.'
+      );
       return responses.crisis;
     }
 
-    if (message.includes('stress') || message.includes('तनाव') || message.includes('دباؤ')) {
+    if (message.includes('stress') || message.includes('तनाव') || message.includes('دباؤ') || 
+        message.includes('تناو') || message.includes('तनाव')) {
       return responses.stress;
     }
-    if (message.includes('anxiety') || message.includes('चिंता') || message.includes('پریشانی')) {
+    if (message.includes('anxiety') || message.includes('चिंता') || message.includes('پریشانی') ||
+        message.includes('پریشانی') || message.includes('گھبراہट')) {
       return responses.anxiety;
     }
-    if (message.includes('sad') || message.includes('उदास') || message.includes('اداس')) {
+    if (message.includes('sad') || message.includes('उदास') || message.includes('اداس') ||
+        message.includes('اداس') || message.includes('उदास')) {
       return responses.sad;
     }
-    if (message.includes('help') || message.includes('मदद') || message.includes('مدد')) {
+    if (message.includes('help') || message.includes('मदد') || message.includes('مدد') ||
+        message.includes('مددہ') || message.includes('मدد')) {
       return responses.help;
     }
 
@@ -149,11 +203,27 @@ const ChatBot: React.FC<ChatBotProps> = ({
       "پریشانی میں مدد چاہیے",
       "تنہائی محسوس کر رہا ہوں",
       "بہتر نیند کے لیے مدد چاہیے",
+    ],
+    ks: [
+      "بہ امتحانو کہ بارے میں تناؤ محسوس کران چھُس",
+      "بہ پریشانی کہ بارے میں مدد لوٹان",
+      "بہ اکیلہ محسوس کران چھُس",
+      "کیا تو بہتر نیند لینہ میں مدد کرہ ہیکہ۔",
+    ],
+    doi: [
+      "मیں امتحاناں دی وجہ کن تناع मحسوس کردا ओ",
+      "मیں گھبراہट لئی مدد لوڑدا ہیں",
+      "मیں اکیلپن محسوس کردا ओ",
+      "کی توں بہتر نیند لئی مدد کر ساکدا ہیں؟",
     ]
   };
 
-  const CrisisModal = () => (
-    showCrisisModal && (
+  const CrisisModal = (): React.JSX.Element | null => {
+    if (!showCrisisModal) {
+      return null;
+    }
+
+    return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <Card padding="lg" className="max-w-md w-full bg-red-50 border-red-200">
           <div className="text-center">
@@ -188,7 +258,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
               <Button
                 variant="primary"
                 className="flex-1 bg-red-600 hover:bg-red-700"
-                onClick={() => onNavigate?.('/appointments')}
+                onClick={() => navigate('/appointments')}
               >
                 Talk to Counselor Now
               </Button>
@@ -202,29 +272,31 @@ const ChatBot: React.FC<ChatBotProps> = ({
           </div>
         </Card>
       </div>
-    )
-  );
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation 
         userRole="student"
         userName={user?.profile?.fullName || 'Student'}
-        onNavigate={onNavigate}
         onLogout={onLogout}
       />
 
       <div className="max-w-4xl mx-auto py-6 px-4">
         {/* Header */}
-        <div className="bg-gradient-to-r from-neon-lavender-500 to-neon-blue-500 rounded-xl p-6 text-white mb-6">
+        <div className="bg-gradient-to-r from-neon-lavender-500 to-neon-blue-500 rounded-xl p-6 text-white mb-6 shadow-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+              <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center animate-pulse">
                 <Bot className="w-8 h-8 text-white" />
               </div>
               <div>
                 <h1 className="text-2xl font-bold">AI Chat Support</h1>
-                <p className="text-blue-100">Your 24/7 mental health companion</p>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <p className="text-blue-100">Online - Ready to help you</p>
+                </div>
               </div>
             </div>
             
@@ -249,12 +321,16 @@ const ChatBot: React.FC<ChatBotProps> = ({
         </div>
 
         {/* Chat Container */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 animate-fade-in">
           {/* Chat Messages */}
           <div className="lg:col-span-3">
-            <Card padding="sm" className="h-96 flex flex-col">
+            <Card padding="sm" className="h-[calc(100vh-300px)] min-h-[500px] flex flex-col transform transition-all duration-300">
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div 
+                ref={messagesContainerRef}
+                onScroll={handleScroll}
+                className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth relative"
+              >
                 {messages.map((message) => (
                   <div
                     key={message.id}
@@ -311,6 +387,20 @@ const ChatBot: React.FC<ChatBotProps> = ({
                     </div>
                   </div>
                 )}
+                
+                {/* Scroll to bottom button */}
+                {showScrollButton && (
+                  <div className="sticky bottom-4 right-4 flex justify-end">
+                    <button
+                      onClick={scrollToBottom}
+                      className="bg-neon-blue-500 text-white p-2 rounded-full shadow-lg hover:bg-neon-blue-600 transition-all duration-200 animate-bounce"
+                      title="Scroll to bottom"
+                    >
+                      <ChevronDown className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+                
                 <div ref={messagesEndRef} />
               </div>
 
@@ -344,7 +434,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
             <Card padding="md">
               <h3 className="font-semibold text-gray-900 mb-4">Quick Replies</h3>
               <div className="space-y-2">
-                {quickReplies[selectedLanguage].map((reply, index) => (
+                {quickReplies[selectedLanguage].map((reply: string, index: number) => (
                   <button
                     key={index}
                     onClick={() => setInputMessage(reply)}
@@ -364,7 +454,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
                   variant="outline"
                   size="sm"
                   className="w-full justify-start"
-                  onClick={() => onNavigate?.('/appointments')}
+                  onClick={() => navigate('/appointments')}
                 >
                   <MessageCircle className="w-4 h-4 mr-2" />
                   Book Counselor Session
@@ -373,7 +463,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
                   variant="outline"
                   size="sm"
                   className="w-full justify-start"
-                  onClick={() => onNavigate?.('/resources')}
+                  onClick={() => navigate('/resources')}
                 >
                   <Heart className="w-4 h-4 mr-2" />
                   Browse Resources
@@ -382,7 +472,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
                   variant="outline"
                   size="sm"
                   className="w-full justify-start"
-                  onClick={() => onNavigate?.('/forum')}
+                  onClick={() => navigate('/forum')}
                 >
                   <Globe className="w-4 h-4 mr-2" />
                   Join Community
@@ -405,6 +495,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
       </div>
 
       <CrisisModal />
+      <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
     </div>
   );
 };

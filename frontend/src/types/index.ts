@@ -39,7 +39,7 @@ export interface CounselorProfile {
   bio?: string;
   avatarUrl?: string;
   isAvailable: boolean;
-  hourlyRate?: number;
+  // Sessions are now free - hourlyRate removed
   rating: number;
   totalSessions: number;
 }
@@ -160,9 +160,9 @@ export interface EmergencyResource {
 export interface Resource {
   id: number;
   title: string;
-  titleTranslations?: Record<Language, string>;
+  titleTranslations?: Partial<Record<Language, string>>;
   description: string;
-  descriptionTranslations?: Record<Language, string>;
+  descriptionTranslations?: Partial<Record<Language, string>>;
   type: ResourceType;
   category: ResourceCategory;
   subcategory?: string;

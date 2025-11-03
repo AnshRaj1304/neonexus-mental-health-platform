@@ -1,16 +1,72 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './pages/Login';
+import { LanguageProvider } from './contexts/LanguageContext';
 import StudentDashboard from './pages/StudentDashboard';
+import CounselorDashboard from './pages/CounselorDashboard';
+import PeerSupportDashboard from './pages/PeerSupportDashboard';
+import AdminDashboard from './pages/AdminDashboard';
 import ChatBot from './pages/ChatBot';
 import Appointments from './pages/Appointments';
 import Resources from './pages/Resources';
+import Community from './pages/Community';
+import MentalHealthScreeningPage from './pages/MentalHealthScreening';
+import ProfileSettings from './pages/ProfileSettings';
+import ErrorBoundary from './components/ErrorBoundary';
+import { PageLoader, ThemeToggle, OfflineIndicator } from './components/ui';
 import { User, LoginForm, UserRole, MoodCheckIn } from './types';
+import Navigation from './components/ui/Navigation';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { NotificationProvider, useToast } from './contexts/NotificationContext';
+import { register as registerSW, initializeInstallPrompt } from './utils/serviceWorker';
 
-function App() {
+function AppContent() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [currentPage, setCurrentPage] = useState<string>('login');
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [registrationError, setRegistrationError] = useState<string | null>(null);
+  const toast = useToast();
+
+  // Initialize PWA features
+  useEffect(() => {
+    // Register service worker
+    registerSW({
+      onSuccess: () => {
+        toast.success('App ready for offline use!');
+      },
+      onUpdate: () => {
+        toast.info('New version available', 'Please refresh the page to update');
+      },
+      onOffline: () => {
+        toast.warning('You are now offline', 'Some features may be limited');
+      },
+      onOnline: () => {
+        toast.success('Connection restored!');
+      }
+    });
+
+    // Initialize install prompt
+    initializeInstallPrompt();
+  }, [toast]);
+
+  // Mock registration function
+  const handleRegister = async (registrationData: any) => {
+    setIsLoading(true);
+    setRegistrationError(null);
+
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      console.log('Registration data:', registrationData);
+      // In a real app, this would send data to backend
+      
+    } catch (error) {
+      setRegistrationError('Registration failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Mock authentication function
   const handleLogin = async (credentials: LoginForm & { role: UserRole }) => {
@@ -50,7 +106,6 @@ function App() {
           qualifications: ['PhD Psychology', 'Licensed Clinical Psychologist'],
           languages: ['English', 'Hindi'],
           isAvailable: true,
-          hourlyRate: 1500,
           rating: 4.8,
           totalSessions: 245
         } : {
@@ -60,7 +115,6 @@ function App() {
       };
 
       setCurrentUser(mockUser);
-      setCurrentPage('dashboard');
     } catch (error) {
       setLoginError('Login failed. Please try again.');
     } finally {
@@ -70,24 +124,8 @@ function App() {
 
   const handleLogout = () => {
     setCurrentUser(null);
-    setCurrentPage('login');
   };
 
-  const handleNavigate = (path: string) => {
-    // Simple navigation system
-    console.log(`Navigating to: ${path}`);
-    if (path === '/chat') {
-      setCurrentPage('chat');
-    } else if (path === '/appointments') {
-      setCurrentPage('appointments');
-    } else if (path === '/resources') {
-      setCurrentPage('resources');
-    } else if (path === '/forum') {
-      setCurrentPage('forum');
-    } else if (path === '/dashboard') {
-      setCurrentPage('dashboard');
-    }
-  };
 
   const handleMoodSubmit = (mood: MoodCheckIn) => {
     console.log('Mood submitted:', mood);
@@ -95,97 +133,223 @@ function App() {
     alert(`Mood check-in submitted! You're feeling: ${mood.mood}/5`);
   };
 
-  if (currentPage === 'login' || !currentUser) {
-    return (
-      <LoginPage 
-        onLogin={handleLogin}
-        isLoading={isLoading}
-        error={loginError}
-      />
-    );
-  }
+  // Protected Route Component
+  const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    return currentUser ? <>{children}</> : <Navigate to="/login" replace />;
+  };
 
-  // Page routing
-  if (currentPage === 'dashboard' && currentUser.role === 'student') {
+  // Community Layout Component
+  const CommunityLayout = () => {
+    if (!currentUser) return <Navigate to="/login" replace />;
+    
     return (
-      <StudentDashboard 
-        user={currentUser}
-        onNavigate={handleNavigate}
-        onLogout={handleLogout}
-        onMoodSubmit={handleMoodSubmit}
-      />
-    );
-  }
-
-  if (currentPage === 'chat') {
-    return (
-      <ChatBot 
-        user={currentUser}
-        onNavigate={handleNavigate}
-        onLogout={handleLogout}
-      />
-    );
-  }
-
-  if (currentPage === 'appointments') {
-    return (
-      <Appointments 
-        user={currentUser}
-        onNavigate={handleNavigate}
-        onLogout={handleLogout}
-      />
-    );
-  }
-
-  if (currentPage === 'resources') {
-    return (
-      <Resources 
-        user={currentUser}
-        onNavigate={handleNavigate}
-        onLogout={handleLogout}
-      />
-    );
-  }
-
-  if (currentPage === 'forum') {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            Peer Support Forum
-          </h1>
-          <p className="text-gray-600 mb-6">
-            Community forum coming soon...
-          </p>
-          <button 
-            onClick={() => setCurrentPage('dashboard')}
-            className="px-4 py-2 bg-neon-blue-500 text-white rounded-lg hover:bg-neon-blue-600 transition-colors"
-          >
-            Back to Dashboard
-          </button>
-        </div>
+      <div className="min-h-screen bg-gray-50">
+        <Navigation 
+          userRole={currentUser.role}
+          userName={currentUser.profile?.fullName || currentUser.username}
+          onLogout={handleLogout}
+        />
+        <Community />
       </div>
     );
+  };
+
+  // Role-based Dashboard Component
+  const DashboardRoute = () => {
+    if (!currentUser) return <Navigate to="/login" replace />;
+    
+    switch (currentUser.role) {
+      case 'student':
+        return (
+          <StudentDashboard 
+            user={currentUser}
+            onLogout={handleLogout}
+            onMoodSubmit={handleMoodSubmit}
+          />
+        );
+      
+      case 'counselor':
+        return (
+          <CounselorDashboard 
+            user={currentUser}
+            onLogout={handleLogout}
+          />
+        );
+      
+      case 'peer_volunteer':
+        return (
+          <PeerSupportDashboard 
+            user={currentUser}
+            onLogout={handleLogout}
+          />
+        );
+      
+      case 'admin':
+        return (
+          <AdminDashboard 
+            user={currentUser}
+            onLogout={handleLogout}
+          />
+        );
+      
+      default:
+        return (
+          <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+            <div className="text-center">
+              <h1 className="text-2xl font-bold text-gray-900 mb-4">
+                Welcome, {currentUser.profile?.fullName}!
+              </h1>
+              <p className="text-gray-600 mb-6">
+                Dashboard for role '{currentUser.role}' is not available.
+              </p>
+              <button 
+                onClick={handleLogout}
+                className="px-4 py-2 bg-neon-blue-500 text-white rounded-lg hover:bg-neon-blue-600 transition-colors"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        );
+    }
+  };
+
+  // Show loading screen during authentication
+  if (isLoading && !currentUser) {
+    return <PageLoader text="Signing you in..." />;
   }
 
-  // Fallback for other roles (counselor, admin) - you can implement these later
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">
-          Welcome, {currentUser.profile?.fullName}!
-        </h1>
-        <p className="text-gray-600 mb-6">
-          {currentUser.role === 'counselor' ? 'Counselor' : 'Admin'} dashboard coming soon...
-        </p>
-        <button 
-          onClick={handleLogout}
-          className="px-4 py-2 bg-neon-blue-500 text-white rounded-lg hover:bg-neon-blue-600 transition-colors"
-        >
-          Logout
-        </button>
-      </div>
-    </div>
+    <LanguageProvider>
+      <ErrorBoundary>
+        <Router>
+        <Routes>
+          {/* Public Routes */}
+          <Route 
+            path="/login" 
+            element={
+              currentUser ? 
+                <Navigate to="/dashboard" replace /> : 
+                <LoginPage 
+                  onLogin={handleLogin}
+                  onRegister={handleRegister}
+                  isLoading={isLoading}
+                  error={loginError}
+                  registrationError={registrationError}
+                />
+            } 
+          />
+        
+        {/* Protected Routes */}
+        <Route 
+          path="/dashboard" 
+          element={
+            <ProtectedRoute>
+              <DashboardRoute />
+            </ProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/chat" 
+          element={
+            <ProtectedRoute>
+              <ChatBot 
+                user={currentUser || undefined}
+                onLogout={handleLogout}
+              />
+            </ProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/appointments" 
+          element={
+            <ProtectedRoute>
+              <Appointments 
+                user={currentUser || undefined}
+                onLogout={handleLogout}
+              />
+            </ProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/resources" 
+          element={
+            <ProtectedRoute>
+              <Resources 
+                user={currentUser || undefined}
+                onLogout={handleLogout}
+              />
+            </ProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/forum" 
+          element={
+            <ProtectedRoute>
+              <CommunityLayout />
+            </ProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/screening" 
+          element={
+            <ProtectedRoute>
+              <MentalHealthScreeningPage 
+                user={currentUser || undefined}
+                onLogout={handleLogout}
+              />
+            </ProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/profile-settings" 
+          element={
+            <ProtectedRoute>
+              <ProfileSettings 
+                user={currentUser || undefined}
+                onLogout={handleLogout}
+              />
+            </ProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/privacy-settings" 
+          element={
+            <ProtectedRoute>
+              <ProfileSettings 
+                user={currentUser || undefined}
+                onLogout={handleLogout}
+              />
+            </ProtectedRoute>
+          } 
+        />
+        
+        {/* Default redirect */}
+        <Route path="/" element={<Navigate to={currentUser ? "/dashboard" : "/login"} replace />} />
+        <Route path="*" element={<Navigate to={currentUser ? "/dashboard" : "/login"} replace />} />
+        </Routes>
+        </Router>
+      </ErrorBoundary>
+    </LanguageProvider>
+  );
+}
+
+// Main App with providers
+function App() {
+  return (
+    <ThemeProvider>
+      <NotificationProvider>
+        <AppContent />
+        <OfflineIndicator />
+      </NotificationProvider>
+    </ThemeProvider>
   );
 }
 

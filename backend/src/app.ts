@@ -3,21 +3,38 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import database from './utils/database';
 
 // Import routes
 import authRoutes from './routes/auth';
-import userRoutes from './routes/users';
+import journeyRoutes from './routes/journey';
+import peerForumRoutes from './routes/peerForum';
 import chatbotRoutes from './routes/chatbot';
 import appointmentRoutes from './routes/appointments';
 import resourceRoutes from './routes/resources';
-import forumRoutes from './routes/forum';
 import analyticsRoutes from './routes/analytics';
+import assessmentRoutes from './routes/assessments';
+import crisisDetectionRoutes from './routes/crisis-detection';
+import aiChatbotRoutes from './routes/ai-chatbot';
 
 // Load environment variables
 dotenv.config();
 
 // Create Express application
 const app = express();
+
+// Initialize database
+let dbConnection: any = null;
+database.initialize().then((db) => {
+  dbConnection = db;
+  console.log('💾 Database connection established');
+}).catch((error) => {
+  console.error('💥 Failed to initialize database:', error);
+  process.exit(1);
+});
+
+// Make database available to routes
+app.locals.db = () => dbConnection;
 
 // Security middleware
 app.use(helmet());
@@ -47,15 +64,18 @@ app.get('/api/health', (req, res) => {
 
 // API routes
 app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
+app.use('/api/journey', journeyRoutes);
+app.use('/api/forum', peerForumRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/resources', resourceRoutes);
-app.use('/api/forum', forumRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/assessments', assessmentRoutes);
+app.use('/api/crisis-detection', crisisDetectionRoutes);
+app.use('/api/ai-chatbot', aiChatbotRoutes);
 
 // 404 handler
-app.use('*', (req, res) => {
+app.use((req, res) => {
   res.status(404).json({
     error: 'Route not found',
     message: `The requested endpoint ${req.originalUrl} does not exist.`
