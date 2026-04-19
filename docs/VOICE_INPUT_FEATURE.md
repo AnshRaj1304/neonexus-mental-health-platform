@@ -1,143 +1,173 @@
-# 🎤 Voice Input Feature for Mood Journaling
+# Voice Input Feature for Mood Journaling
 
-## ✅ **What's New**
+## What’s New
 
-The Student Dashboard now includes **voice input functionality** for mood journaling notes, making it easier and more accessible for students to express their thoughts and feelings.
+The Student Dashboard now includes voice input functionality for mood journaling notes, allowing students to express their thoughts using speech-to-text input.
 
-## 🎯 **Key Features**
+---
 
-### **🎙️ Voice-to-Text Input**
-- **Speech Recognition**: Uses Web Speech API for accurate voice-to-text conversion
-- **Real-time Feedback**: Shows interim transcription as you speak
-- **Multi-language Support**: Supports 7 different languages including Hindi and Urdu
-- **Smart Integration**: Voice input automatically appends to existing text
+## Key Features
 
-### **🌍 Language Support**
-- 🇺🇸 **English (US)** - `en-US`
-- 🇬🇧 **English (UK)** - `en-GB`  
-- 🇮🇳 **Hindi** - `hi-IN`
-- 🇵🇰 **Urdu** - `ur-PK`
-- 🇪🇸 **Spanish** - `es-ES`
-- 🇫🇷 **French** - `fr-FR`
-- 🇩🇪 **German** - `de-DE`
+### Voice-to-Text Input
 
-### **🎨 Visual Feedback**
-- **Microphone Button**: Blue when idle, red and pulsing when recording
-- **Recording Indicator**: "Listening..." badge with animation
-- **Interim Transcript**: Real-time preview of what's being spoken
-- **Error Handling**: Clear error messages for troubleshooting
+* Speech recognition powered by the Web Speech API
+* Real-time transcription with interim results
+* Multi-language support
+* Automatically appends transcribed text to existing input
 
-## 🔄 **How It Works**
+---
 
-### **Step 1: Access Voice Input**
-```
-[Mood Form] → [Select Mood] → [Notes Section] → [🎤 Microphone Button]
-```
+## Language Support
 
-### **Step 2: Choose Language**
-- Select preferred language from dropdown (bottom right of notes section)
-- Language setting persists for the session
+* English (US) — `en-US`
+* English (UK) — `en-GB`
+* Hindi — `hi-IN`
+* Urdu — `ur-PK`
+* Spanish — `es-ES`
+* French — `fr-FR`
+* German — `de-DE`
 
-### **Step 3: Voice Recording**
-1. **Click** the blue microphone button
-2. **Allow** microphone permissions (if prompted)
-3. **Speak** your thoughts naturally
-4. **See** real-time transcription appear
-5. **Click** the red microphone button to stop
+---
 
-### **Step 4: Review & Submit**
-- Voice text is automatically added to the textarea
-- Edit the transcribed text if needed
-- Submit your mood entry as normal
+## Visual Feedback
 
-## 🎭 **User Interface**
+* Microphone button indicates recording state
+* Active recording indicator with “Listening” status
+* Real-time preview of spoken text
+* Clear error messages for unsupported scenarios
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│ Any thoughts you'd like to share? (Optional)   💬 Type or 🎤│
-├─────────────────────────────────────────────────────────────┤
-│ [Text area with voice transcription...]                     │
-│                                        142 characters       │
-├─────────────────────────────────────────────────────────────┤
-│ 💡 Tip: You can type or use voice input    Voice: [🇺🇸 EN] │
-└─────────────────────────────────────────────────────────────┘
+---
+
+## How It Works
+
+### Step 1: Access Voice Input
+
+```id="9qg6gi"
+Mood Form → Select Mood → Notes Section → Microphone Button
 ```
 
-**When Recording:**
-```
-┌─────────────────────────────────────────────────────────────┐
-│           🔴 [Listening...] (animated bounce)               │
-│                                                             │
-│        📝 Speaking: "I had a great day today..."           │
-└─────────────────────────────────────────────────────────────┘
-```
+### Step 2: Choose Language
 
-## 🛠️ **Technical Features**
+* Select preferred language from the dropdown
+* Language preference persists during the session
 
-### **Browser Compatibility**
-- **Supported**: Chrome, Edge, Safari (recent versions)
-- **Fallback**: Shows "not supported" message for incompatible browsers
-- **Progressive Enhancement**: Text input always available
+### Step 3: Voice Recording
 
-### **Error Handling**
-- **Permission Denied**: Clear instructions to enable microphone
-- **No Speech Detected**: Prompts to try again
-- **Network Issues**: Handles offline scenarios
-- **Audio Capture**: Detects microphone problems
+1. Activate the microphone
+2. Grant permission if prompted
+3. Speak naturally
+4. View real-time transcription
+5. Stop recording manually
 
-### **Performance Optimizations**
-- **Lazy Loading**: Speech recognition initialized only when needed
-- **Memory Management**: Proper cleanup on component unmount
-- **Debounced Updates**: Efficient text updates to prevent lag
+### Step 4: Review and Submit
 
-## 🎯 **User Experience Benefits**
+* Transcribed text is inserted into the input field
+* User can edit text before submission
+* Submit the mood entry as usual
 
-### **Accessibility**
-- **Motor Disabilities**: Easier than typing for users with limited hand mobility
-- **Dyslexia**: Helpful for users who prefer speaking over writing
-- **Multilingual**: Native language support for better expression
+---
 
-### **Convenience**
-- **Faster Input**: Speaking is often faster than typing
-- **Natural Expression**: More comfortable way to share thoughts
-- **Mobile Friendly**: Excellent for touch devices
+## User Interface
 
-### **Engagement**
-- **Lower Barrier**: Reduces friction in mood journaling
-- **More Detail**: Users may share more when speaking vs typing
-- **Regular Use**: Easier process encourages daily check-ins
+```id="1zbl0p"
+Notes Section
+[Text input area with transcription]
 
-## 🔒 **Privacy & Security**
-
-- **Client-side Processing**: Speech recognition happens in the browser
-- **No Recording Storage**: Audio is not stored or transmitted
-- **Temporary Transcription**: Text is only kept in component state
-- **User Control**: Users can start/stop recording at any time
-
-## 📱 **Usage Examples**
-
-### **Example 1: Quick Update**
-```
-🎤 → "Feeling good today, aced my exam!" → Stop → Submit
+Character count displayed
+Language selector available
 ```
 
-### **Example 2: Detailed Reflection**
-```
-🎤 → "I'm feeling a bit anxious about tomorrow's presentation, 
-      but I've been practicing and think I'm ready. 
-      My study group was really supportive today." → Stop → Submit
-```
+### Recording State
 
-### **Example 3: Multilingual**
-```
-Language: 🇮🇳 Hindi → 🎤 → "आज मैं बहुत खुश हूं" → Stop → Submit
+```id="c9s8hp"
+Listening status displayed
+Interim transcription shown in real time
 ```
 
-## 🚀 **Future Enhancements**
+---
 
-- **Emotion Detection**: Analyze voice tone for mood insights
-- **Voice Commands**: "Submit entry", "Clear text", etc.
-- **Offline Support**: Local speech recognition capabilities
-- **Voice Patterns**: Analyze speech patterns for mental health insights
+## Technical Features
 
-This voice input feature makes mood journaling more accessible, convenient, and engaging for all users! 🌟
+### Browser Compatibility
+
+* Supported: Chrome, Edge, Safari (recent versions)
+* Fallback for unsupported browsers
+* Text input remains available as default
+
+### Error Handling
+
+* Microphone permission handling
+* No speech detection prompts
+* Network and audio capture error handling
+
+### Performance
+
+* Lazy initialization of speech recognition
+* Cleanup on component unmount
+* Optimized state updates for smooth transcription
+
+---
+
+## User Experience Benefits
+
+### Accessibility
+
+* Supports users with limited typing ability
+* Useful for users who prefer speaking over writing
+* Enables multilingual expression
+
+### Convenience
+
+* Faster input compared to typing
+* More natural expression of thoughts
+* Optimized for mobile usage
+
+### Engagement
+
+* Reduces friction in journaling
+* Encourages more detailed input
+* Improves consistency of daily usage
+
+---
+
+## Privacy and Security
+
+* Speech processing handled on the client side
+* No audio data is stored
+* Transcription exists only in session state
+* Full user control over recording
+
+---
+
+## Usage Examples
+
+### Example 1
+
+```id="kz1gdn"
+"Feeling good today, completed my tasks successfully."
+```
+
+### Example 2
+
+```id="r7r7b2"
+"I feel slightly anxious about tomorrow's presentation, but I have prepared well."
+```
+
+### Example 3
+
+```id="0m4g8k"
+Hindi input: "आज मैं अच्छा महसूस कर रहा हूँ"
+```
+
+---
+
+## Future Enhancements
+
+* Voice-based emotion analysis
+* Voice command support
+* Offline speech recognition
+* Analysis of speech patterns for behavioral insights
+
+---
+
+This feature improves accessibility and usability by enabling natural, voice-based interaction within mood journaling.
