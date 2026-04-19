@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './pages/Login';
 import { LanguageProvider } from './contexts/LanguageContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import StudentDashboard from './pages/StudentDashboard';
 import CounselorDashboard from './pages/CounselorDashboard';
 import PeerSupportDashboard from './pages/PeerSupportDashboard';
@@ -13,185 +14,86 @@ import Community from './pages/Community';
 import MentalHealthScreeningPage from './pages/MentalHealthScreening';
 import ProfileSettings from './pages/ProfileSettings';
 import ErrorBoundary from './components/ErrorBoundary';
-import { PageLoader, ThemeToggle, OfflineIndicator } from './components/ui';
-import { User, LoginForm, UserRole, MoodCheckIn } from './types';
+import { PageLoader, OfflineIndicator } from './components/ui';
+import { MoodCheckIn } from './types';
 import Navigation from './components/ui/Navigation';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { NotificationProvider, useToast } from './contexts/NotificationContext';
 import { register as registerSW, initializeInstallPrompt } from './utils/serviceWorker';
 
+// ---------------------------------------------------------------------------
+// Inner app shell — consumes AuthContext
+// ---------------------------------------------------------------------------
 function AppContent() {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [loginError, setLoginError] = useState<string | null>(null);
-  const [registrationError, setRegistrationError] = useState<string | null>(null);
+  const {
+    currentUser,
+    isLoading,
+    loginError,
+    registrationError,
+    login,
+    register,
+    logout,
+  } = useAuth();
   const toast = useToast();
 
-  // Initialize PWA features
-  useEffect(() => {
-    // Register service worker
+  // Initialise PWA features once
+  React.useEffect(() => {
     registerSW({
-      onSuccess: () => {
-        toast.success('App ready for offline use!');
-      },
-      onUpdate: () => {
-        toast.info('New version available', 'Please refresh the page to update');
-      },
-      onOffline: () => {
-        toast.warning('You are now offline', 'Some features may be limited');
-      },
-      onOnline: () => {
-        toast.success('Connection restored!');
-      }
+      onSuccess: () => toast.success('App ready for offline use!'),
+      onUpdate: () => toast.info('New version available', 'Please refresh the page to update'),
+      onOffline: () => toast.warning('You are now offline', 'Some features may be limited'),
+      onOnline: () => toast.success('Connection restored!'),
     });
-
-    // Initialize install prompt
     initializeInstallPrompt();
   }, [toast]);
 
-  // Mock registration function
+  // --- Handler adapters (keep page component signatures unchanged) ---------
+
+  const handleLogin = async (credentials: { email: string; password: string; role: any }) => {
+    await login(credentials.email, credentials.password, credentials.role);
+  };
+
   const handleRegister = async (registrationData: any) => {
-    setIsLoading(true);
-    setRegistrationError(null);
-
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      console.log('Registration data:', registrationData);
-      // In a real app, this would send data to backend
-      
-    } catch (error) {
-      setRegistrationError('Registration failed. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
+    await register(registrationData);
   };
-
-  // Mock authentication function
-  const handleLogin = async (credentials: LoginForm & { role: UserRole }) => {
-    setIsLoading(true);
-    setLoginError(null);
-
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      // Mock user data based on role
-      const mockUser: User = {
-        id: 1,
-        username: credentials.role === 'student' ? 'student123' : 
-                 credentials.role === 'counselor' ? 'counselor1' : 'admin1',
-        email: credentials.email,
-        role: credentials.role,
-        institutionId: 'UNIV123',
-        isActive: true,
-        isVerified: true,
-        languagePreference: 'en',
-        createdAt: new Date().toISOString(),
-        profile: credentials.role === 'student' ? {
-          fullName: 'Kabir Kumar',
-          yearOfStudy: 3,
-          department: 'Computer Science',
-          preferences: {
-            language: 'en',
-            notifications: true,
-            anonymousMode: false
-          }
-        } : credentials.role === 'counselor' ? {
-          fullName: 'Dr. Aasha Akhtar',
-          licenseNumber: 'PSY123456',
-          specialization: ['Anxiety', 'Depression'],
-          experienceYears: 8,
-          qualifications: ['PhD Psychology', 'Licensed Clinical Psychologist'],
-          languages: ['English', 'Hindi'],
-          isAvailable: true,
-          rating: 4.8,
-          totalSessions: 245
-        } : {
-          fullName: 'Admin User',
-          institution: 'University Mental Health Center'
-        }
-      };
-
-      setCurrentUser(mockUser);
-    } catch (error) {
-      setLoginError('Login failed. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleLogout = () => {
-    setCurrentUser(null);
-  };
-
 
   const handleMoodSubmit = (mood: MoodCheckIn) => {
     console.log('Mood submitted:', mood);
-    // In a real app, this would save to the backend
-    alert(`Mood check-in submitted! You're feeling: ${mood.mood}/5`);
+    // TODO: wire to backend API (POST /api/assessments/mood)
+    toast.success(`Mood check-in submitted! You're feeling: ${mood.mood}/5`);
   };
 
-  // Protected Route Component
+  // --- Route guards -------------------------------------------------------
+
   const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     return currentUser ? <>{children}</> : <Navigate to="/login" replace />;
   };
 
-  // Community Layout Component
   const CommunityLayout = () => {
     if (!currentUser) return <Navigate to="/login" replace />;
-    
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navigation 
+        <Navigation
           userRole={currentUser.role}
           userName={currentUser.profile?.fullName || currentUser.username}
-          onLogout={handleLogout}
+          onLogout={logout}
         />
         <Community />
       </div>
     );
   };
 
-  // Role-based Dashboard Component
   const DashboardRoute = () => {
     if (!currentUser) return <Navigate to="/login" replace />;
-    
     switch (currentUser.role) {
       case 'student':
-        return (
-          <StudentDashboard 
-            user={currentUser}
-            onLogout={handleLogout}
-            onMoodSubmit={handleMoodSubmit}
-          />
-        );
-      
+        return <StudentDashboard user={currentUser} onLogout={logout} onMoodSubmit={handleMoodSubmit} />;
       case 'counselor':
-        return (
-          <CounselorDashboard 
-            user={currentUser}
-            onLogout={handleLogout}
-          />
-        );
-      
+        return <CounselorDashboard user={currentUser} onLogout={logout} />;
       case 'peer_volunteer':
-        return (
-          <PeerSupportDashboard 
-            user={currentUser}
-            onLogout={handleLogout}
-          />
-        );
-      
+        return <PeerSupportDashboard user={currentUser} onLogout={logout} />;
       case 'admin':
-        return (
-          <AdminDashboard 
-            user={currentUser}
-            onLogout={handleLogout}
-          />
-        );
-      
+        return <AdminDashboard user={currentUser} onLogout={logout} />;
       default:
         return (
           <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -202,10 +104,7 @@ function AppContent() {
               <p className="text-gray-600 mb-6">
                 Dashboard for role '{currentUser.role}' is not available.
               </p>
-              <button 
-                onClick={handleLogout}
-                className="px-4 py-2 bg-neon-blue-500 text-white rounded-lg hover:bg-neon-blue-600 transition-colors"
-              >
+              <button onClick={logout} className="px-4 py-2 bg-neon-blue-500 text-white rounded-lg hover:bg-neon-blue-600 transition-colors">
                 Logout
               </button>
             </div>
@@ -214,140 +113,68 @@ function AppContent() {
     }
   };
 
-  // Show loading screen during authentication
+  // --- Loading state -------------------------------------------------------
+
   if (isLoading && !currentUser) {
     return <PageLoader text="Signing you in..." />;
   }
+
+  // --- Render --------------------------------------------------------------
 
   return (
     <LanguageProvider>
       <ErrorBoundary>
         <Router>
-        <Routes>
-          {/* Public Routes */}
-          <Route 
-            path="/login" 
-            element={
-              currentUser ? 
-                <Navigate to="/dashboard" replace /> : 
-                <LoginPage 
-                  onLogin={handleLogin}
-                  onRegister={handleRegister}
-                  isLoading={isLoading}
-                  error={loginError}
-                  registrationError={registrationError}
-                />
-            } 
-          />
-        
-        {/* Protected Routes */}
-        <Route 
-          path="/dashboard" 
-          element={
-            <ProtectedRoute>
-              <DashboardRoute />
-            </ProtectedRoute>
-          } 
-        />
-        
-        <Route 
-          path="/chat" 
-          element={
-            <ProtectedRoute>
-              <ChatBot 
-                user={currentUser || undefined}
-                onLogout={handleLogout}
-              />
-            </ProtectedRoute>
-          } 
-        />
-        
-        <Route 
-          path="/appointments" 
-          element={
-            <ProtectedRoute>
-              <Appointments 
-                user={currentUser || undefined}
-                onLogout={handleLogout}
-              />
-            </ProtectedRoute>
-          } 
-        />
-        
-        <Route 
-          path="/resources" 
-          element={
-            <ProtectedRoute>
-              <Resources 
-                user={currentUser || undefined}
-                onLogout={handleLogout}
-              />
-            </ProtectedRoute>
-          } 
-        />
-        
-        <Route 
-          path="/forum" 
-          element={
-            <ProtectedRoute>
-              <CommunityLayout />
-            </ProtectedRoute>
-          } 
-        />
-        
-        <Route 
-          path="/screening" 
-          element={
-            <ProtectedRoute>
-              <MentalHealthScreeningPage 
-                user={currentUser || undefined}
-                onLogout={handleLogout}
-              />
-            </ProtectedRoute>
-          } 
-        />
-        
-        <Route 
-          path="/profile-settings" 
-          element={
-            <ProtectedRoute>
-              <ProfileSettings 
-                user={currentUser || undefined}
-                onLogout={handleLogout}
-              />
-            </ProtectedRoute>
-          } 
-        />
-        
-        <Route 
-          path="/privacy-settings" 
-          element={
-            <ProtectedRoute>
-              <ProfileSettings 
-                user={currentUser || undefined}
-                onLogout={handleLogout}
-              />
-            </ProtectedRoute>
-          } 
-        />
-        
-        {/* Default redirect */}
-        <Route path="/" element={<Navigate to={currentUser ? "/dashboard" : "/login"} replace />} />
-        <Route path="*" element={<Navigate to={currentUser ? "/dashboard" : "/login"} replace />} />
-        </Routes>
+          <Routes>
+            {/* Public */}
+            <Route
+              path="/login"
+              element={
+                currentUser ? (
+                  <Navigate to="/dashboard" replace />
+                ) : (
+                  <LoginPage
+                    onLogin={handleLogin}
+                    onRegister={handleRegister}
+                    isLoading={isLoading}
+                    error={loginError}
+                    registrationError={registrationError}
+                  />
+                )
+              }
+            />
+
+            {/* Protected */}
+            <Route path="/dashboard" element={<ProtectedRoute><DashboardRoute /></ProtectedRoute>} />
+            <Route path="/chat" element={<ProtectedRoute><ChatBot user={currentUser || undefined} onLogout={logout} /></ProtectedRoute>} />
+            <Route path="/appointments" element={<ProtectedRoute><Appointments user={currentUser || undefined} onLogout={logout} /></ProtectedRoute>} />
+            <Route path="/resources" element={<ProtectedRoute><Resources user={currentUser || undefined} onLogout={logout} /></ProtectedRoute>} />
+            <Route path="/forum" element={<ProtectedRoute><CommunityLayout /></ProtectedRoute>} />
+            <Route path="/screening" element={<ProtectedRoute><MentalHealthScreeningPage user={currentUser || undefined} onLogout={logout} /></ProtectedRoute>} />
+            <Route path="/profile-settings" element={<ProtectedRoute><ProfileSettings user={currentUser || undefined} onLogout={logout} /></ProtectedRoute>} />
+            <Route path="/privacy-settings" element={<ProtectedRoute><ProfileSettings user={currentUser || undefined} onLogout={logout} /></ProtectedRoute>} />
+
+            {/* Defaults */}
+            <Route path="/" element={<Navigate to={currentUser ? "/dashboard" : "/login"} replace />} />
+            <Route path="*" element={<Navigate to={currentUser ? "/dashboard" : "/login"} replace />} />
+          </Routes>
         </Router>
       </ErrorBoundary>
     </LanguageProvider>
   );
 }
 
-// Main App with providers
+// ---------------------------------------------------------------------------
+// Root App — wraps providers
+// ---------------------------------------------------------------------------
 function App() {
   return (
     <ThemeProvider>
       <NotificationProvider>
-        <AppContent />
-        <OfflineIndicator />
+        <AuthProvider>
+          <AppContent />
+          <OfflineIndicator />
+        </AuthProvider>
       </NotificationProvider>
     </ThemeProvider>
   );

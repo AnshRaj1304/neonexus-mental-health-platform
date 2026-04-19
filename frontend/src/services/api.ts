@@ -28,10 +28,17 @@ export const API_CONFIG = {
     RESOURCE_CATEGORIES: '/resources/categories',
     RESOURCE_BY_ID: '/resources',
     
-    // Chat
+    // Chat (legacy)
     CHAT_SESSIONS: '/chat/sessions',
     CHAT_MESSAGES: '/chat/messages',
     CHAT_CRISIS_ALERT: '/chat/crisis-alert',
+
+    // Chat API (multilingual chatbot module)
+    CHAT_SESSION: '/chat/session',
+    CHAT_MESSAGE: '/chat/message',
+    CHAT_SCREENING_START: '/chat/screening/start',
+    CHAT_SCREENING_ANSWER: '/chat/screening/answer',
+    CHAT_SCREENING_RESULTS: '/chat/screening/results',
     
     // Notifications
     NOTIFICATIONS: '/notifications',

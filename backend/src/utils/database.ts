@@ -139,8 +139,8 @@ class Database {
         FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
       )`,
 
-      // Mental health assessments
-      `CREATE TABLE IF NOT EXISTS mental_health_assessments (
+      // Mental health assessment records (user-submitted results)
+      `CREATE TABLE IF NOT EXISTS mental_health_assessment_records (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL,
         assessment_type TEXT NOT NULL CHECK (assessment_type IN ('mood_checkin', 'phq9', 'gad7', 'custom')),
@@ -246,47 +246,7 @@ class Database {
         FOREIGN KEY (assessment_id) REFERENCES mental_health_assessments (id) ON DELETE CASCADE
       )`,
 
-      // Update user profiles structure
-      `CREATE TABLE IF NOT EXISTS student_profiles (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER NOT NULL,
-        name TEXT,
-        phone TEXT,
-        emergency_contact_name TEXT,
-        emergency_contact_phone TEXT,
-        student_id TEXT,
-        year_of_study INTEGER,
-        major TEXT,
-        gpa REAL,
-        academic_standing TEXT CHECK (academic_standing IN ('good', 'probation', 'suspension')),
-        timezone TEXT,
-        notification_preferences TEXT, -- JSON object
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
-      )`,
-
-      `CREATE TABLE IF NOT EXISTS counselor_profiles (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER NOT NULL,
-        name TEXT,
-        phone TEXT,
-        emergency_contact_name TEXT,
-        emergency_contact_phone TEXT,
-        employee_id TEXT,
-        title TEXT,
-        specialization TEXT,
-        license_number TEXT,
-        years_of_experience INTEGER,
-        bio TEXT,
-        availability_schedule TEXT, -- JSON object
-        timezone TEXT,
-        notification_preferences TEXT, -- JSON object
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
-      )`,
-
+      // Admin profiles
       `CREATE TABLE IF NOT EXISTS admin_profiles (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL,

@@ -11,6 +11,10 @@ export { default as SearchBar } from './SearchBar';
 export { default as OfflineIndicator } from './OfflineIndicator';
 export { default as FadeIn } from './FadeIn';
 export { default as ToastContainer } from './ToastContainer';
+export { default as MoodCheckInSection } from './MoodCheckInSection';
+export { default as QuickActionsGrid } from './QuickActionsGrid';
+export { default as MoodJournalSection } from './MoodJournalSection';
+export { default as SidebarWidgets } from './SidebarWidgets';
 
 // From Loading.tsx
 export { default as Loading, PageLoader, ComponentLoader, ButtonLoader, InlineLoader } from './Loading';

@@ -17,6 +17,9 @@ import assessmentRoutes from './routes/assessments';
 import crisisDetectionRoutes from './routes/crisis-detection';
 import aiChatbotRoutes from './routes/ai-chatbot';
 
+// Import chat module (multilingual chatbot microservice)
+const { router: chatModuleRouter, initChatModule } = require('../server/app');
+
 // Load environment variables
 dotenv.config();
 
@@ -28,6 +31,8 @@ let dbConnection: any = null;
 database.initialize().then((db) => {
   dbConnection = db;
   console.log('💾 Database connection established');
+  // Initialize chat module databases (Sequelize + MongoDB + Redis)
+  return initChatModule();
 }).catch((error) => {
   console.error('💥 Failed to initialize database:', error);
   process.exit(1);
@@ -73,6 +78,7 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/assessments', assessmentRoutes);
 app.use('/api/crisis-detection', crisisDetectionRoutes);
 app.use('/api/ai-chatbot', aiChatbotRoutes);
+app.use('/api/chat', chatModuleRouter);
 
 // 404 handler
 app.use((req, res) => {

@@ -156,6 +156,54 @@ export interface EmergencyResource {
   message?: string;
 }
 
+// Chat API Types (backend /api/chat/* contract)
+export interface ChatSessionResponse {
+  success: boolean;
+  sessionId: string;
+  createdAt: string;
+}
+
+export interface ChatMessageResponse {
+  success: boolean;
+  reply: string;
+  crisisDetected: boolean;
+  intent: string;
+  confidence: number;
+  helplines?: Helpline[];
+  severity?: string;
+}
+
+export interface Helpline {
+  name: string;
+  number: string;
+  available: string;
+}
+
+export interface ScreeningStartResponse {
+  success: boolean;
+  screeningName: string;
+  instruction: string;
+  question: string;
+  questionIndex: number;
+  totalQuestions: number;
+  options: string[];
+}
+
+export interface ScreeningAnswerResponse {
+  success: boolean;
+  done: boolean;
+  question?: string;
+  questionIndex?: number;
+  totalQuestions?: number;
+  options?: string[];
+  score?: number;
+  severity?: string;
+  severityKey?: string;
+  answers?: number[];
+}
+
+export type ScreeningType = 'PHQ9' | 'GAD7' | 'GHQ12';
+
 // Resource Types
 export interface Resource {
   id: number;
